@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Teseo — Biglietti TEP Parma</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #1657be;
+      --brand-dark: #0e3e8a;
+      --brand-light: #e8f0fd;
+      --brand-mid: #2a6dd9;
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --text: #111318;
+      --text-2: #5a6070;
+      --text-3: #9ba0ac;
+      --border: rgba(0,0,0,0.1);
+      --border-mid: rgba(0,0,0,0.18);
+      --green: #16a34a;
+      --green-bg: #dcfce7;
+      --red: #dc2626;
+      --red-bg: #fee2e2;
+      --orange: #ea580c;
+      --orange-bg: #ffedd5;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --font: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* PHONE SHELL */
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      height: 100vh;
+      max-height: 844px;
+      margin: 0 auto;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (min-height: 860px) {
+      .phone {
+        height: 844px;
+        margin: calc((100vh - 844px) / 2) auto 0;
+        border-radius: 44px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1);
+      }
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      background: var(--brand);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .status-icons { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+    /* TOP NAV */
+    .topnav {
+      background: var(--brand);
+      padding: 4px 20px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .topnav h1 { font-size: 28px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+    .topnav .buy-btn {
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 0;
+    }
+
+    /* SCROLL AREA */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* PAGES */
+    .page { display: none; padding: 16px; }
+    .page.active { display: block; }
+
+    /* SECTION LABEL */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      margin: 14px 0 8px;
+    }
+
+    /* TICKET CARD */
+    .ticket-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+
+    .ticket-card:active { transform: scale(0.98); }
+
+    .ticket-stripe {
+      height: 5px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-mid));
+    }
+
+    .ticket-inner {
+      padding: 14px 16px 12px;
+    }
+
+    .ticket-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .ticket-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .ticket-sub {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-active { background: var(--green-bg); color: var(--green); }
+    .badge-expired { background: var(--red-bg); color: var(--red); }
+    .badge-used { background: var(--orange-bg); color: var(--orange); }
+
+    .ticket-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .ticket-meta { flex: 1; }
+
+    .t-row {
+      font-size: 12px;
+      color: var(--text-2);
+      display: flex;
+      gap: 5px;
+      margin-bottom: 4px;
+      align-items: center;
+    }
+
+    .t-row strong { color: var(--text); font-weight: 600; font-size: 12px; }
+
+    .t-label { color: var(--text-3); min-width: 72px; }
+
+    .qr-wrap {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+
+    .qr-wrap canvas, .qr-wrap img { width: 64px !important; height: 64px !important; border-radius: 4px; }
+
+    .ticket-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px 12px;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .ticket-id {
+      font-size: 10px;
+      color: var(--text-3);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .validate-btn {
+      background: var(--brand);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s;
+    }
+
+    .validate-btn:active { background: var(--brand-dark); }
+
+    .used-label {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* SCAN STAMP on ticket */
+    .scan-stamp {
+      background: var(--green-bg);
+      border-top: 0.5px solid rgba(22,163,74,0.2);
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* EXPIRED OVERLAY */
+    .expired-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      pointer-events: none;
+    }
+
+    .expired-stamp {
+      font-size: 32px;
+      font-weight: 900;
+      color: rgba(220,38,38,0.35);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      transform: rotate(-18deg);
+      border: 4px solid rgba(220,38,38,0.3);
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-3);
+    }
+
+    .empty-state .icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+    .empty-cta {
+      background: var(--brand);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    /* BIGLIETTI SCADUTI ROW */
+    .expired-row {
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    .expired-row-left { display: flex; align-items: center; gap: 10px; }
+    .expired-row-icon {
+      width: 32px; height: 32px;
+      background: var(--bg);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .expired-row-text { font-size: 14px; font-weight: 500; color: var(--text); }
+    .chevron { color: var(--text-3); font-size: 18px; }
+
+    /* BUY PAGE */
+    .buy-item {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    .buy-item-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .buy-item-desc { font-size: 12px; color: var(--text-2); }
+
+    .buy-item-right { display: flex; align-items: center; gap: 10px; }
+
+    .tep-logo {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--brand);
+      border: 2px solid var(--brand);
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .price-btn {
+      background: var(--brand);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .price-btn:active { background: var(--brand-dark); transform: scale(0.96); }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      display: flex;
+      background: var(--card-bg);
+      border-top: 0.5px solid var(--border);
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 6px;
+      cursor: pointer;
+      gap: 3px;
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .bnav-item.active {
+      background: var(--brand-light);
+      color: var(--brand);
+      border-radius: 0;
+    }
+
+    .bnav-icon { font-size: 22px; line-height: 1; }
+
+    /* OVERLAY — QR SCANNER */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      background: #000;
+    }
+
+    .overlay.open { display: flex; }
+
+    .overlay-head {
+      background: rgba(0,0,0,0.85);
+      padding: 48px 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .overlay-back {
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .overlay-title { font-size: 18px; font-weight: 700; color: white; }
+
+    .scanner-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #html5-qrcode-button-camera-permission,
+    #html5-qrcode-button-camera-stop { display: none !important; }
+
+    #qr-reader {
+      width: 100% !important;
+      border: none !important;
+    }
+
+    #qr-reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+    }
+
+    #qr-reader img { display: none !important; }
+
+    .scanner-frame {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .scan-box {
+      width: 220px;
+      height: 220px;
+      position: relative;
+    }
+
+    .scan-box::before, .scan-box::after,
+    .scan-box .corner-bl, .scan-box .corner-br {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-color: white;
+      border-style: solid;
+    }
+
+    .scan-box::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .scan-box::after  { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .scan-box .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+    .scan-box .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+    .scan-line {
+      position: absolute;
+      left: 4px; right: 4px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--brand-mid), white, var(--brand-mid), transparent);
+      animation: scanline 2s linear infinite;
+      top: 0;
+    }
+
+    @keyframes scanline {
+      0%   { top: 4px; opacity: 1; }
+      90%  { top: 214px; opacity: 1; }
+      100% { top: 214px; opacity: 0; }
+    }
+
+    .scan-hint {
+      position: absolute;
+      bottom: 80px;
+      left: 0; right: 0;
+      text-align: center;
+      color: white;
+      font-size: 13px;
+      opacity: 0.75;
+    }
+
+    /* VALIDATION RESULT POPUP */
+    .val-popup {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-radius: 24px 24px 0 0;
+      padding: 20px 20px 28px;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
+    }
+
+    .val-popup.show { transform: translateY(0); }
+
+    .val-handle {
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .val-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .val-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .val-icon.ok { background: var(--green-bg); }
+    .val-icon.no { background: var(--red-bg); }
+
+    .val-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .val-sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+
+    .val-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+    }
+
+    .val-info-row:last-child { border-bottom: none; }
+
+    .val-info-label { color: var(--text-2); }
+    .val-info-val { font-weight: 600; color: var(--text); }
+
+    .val-scan-time {
+      background: var(--brand-light);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--brand);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .val-close {
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px;
+      border: none;
+      border-radius: 24px;
+      background: var(--brand);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    /* CONFIRM PURCHASE OVERLAY */
+    .buy-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .buy-overlay.open { display: flex; }
+
+    .buy-sheet {
+      background: white;
+      width: 100%;
+      max-width: 390px;
+      border-radius: 24px 24px 0 0;
+      padding: 20px 20px 36px;
+    }
+
+    .buy-sheet-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 18px; }
+    .buy-sheet h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .buy-sheet .bprice { font-size: 30px; font-weight: 900; color: var(--brand); margin-bottom: 14px; }
+    .buy-sheet p { font-size: 13px; color: var(--text-2); margin-bottom: 20px; }
+
+    .buy-confirm-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--brand);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      margin-bottom: 10px;
+    }
+
+    .buy-cancel-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      color: var(--text-2);
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,20,20,0.9);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.25s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ICONS (SVG inline) */
+    svg.icon { display: inline-block; vertical-align: middle; }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span id="clock">12:00</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+        <rect x="0" y="3" width="3" height="9" rx="1"/>
+        <rect x="4.5" y="2" width="3" height="10" rx="1"/>
+        <rect x="9" y="0.5" width="3" height="11.5" rx="1"/>
+        <rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity=".4"/>
+      </svg>
+      <span style="font-size:11px;font-weight:700;">5G</span>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+        <rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="white" stroke-opacity=".35"/>
+        <rect x="2" y="2" width="17" height="8" rx="1.5" fill="white"/>
+        <path d="M24 4v4a2 2 0 000-4z" fill="white" opacity=".5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- TOP NAV -->
+  <div class="topnav" id="topnav">
+    <h1 id="page-title">Biglietti</h1>
+    <button class="buy-btn" id="buy-btn-top" onclick="showPage('buy')">Acquista</button>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area">
+
+    <!-- PAGE: BIGLIETTI (wallet) -->
+    <div class="page active" id="page-biglietti">
+
+      <!-- empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="icon">🎫</div>
+        <p>Nessun biglietto nel portafoglio.<br>Acquistane uno per iniziare!</p>
+        <button class="empty-cta" onclick="showPage('buy')">Acquista biglietto</button>
+      </div>
+
+      <!-- tickets -->
+      <div id="active-label" class="section-label" style="display:none;">Attivi</div>
+      <div id="active-tickets"></div>
+
+      <!-- expired row -->
+      <div id="expired-row" class="expired-row" style="display:none;" onclick="toggleExpired()">
+        <div class="expired-row-left">
+          <div class="expired-row-icon">🎟️</div>
+          <span class="expired-row-text">Biglietti scaduti</span>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+
+      <div id="expired-label" class="section-label" style="display:none;margin-top:14px;">Scaduti</div>
+      <div id="expired-tickets"></div>
+    </div>
+
+    <!-- PAGE: ACQUISTA -->
+    <div class="page" id="page-buy">
+      <div class="section-label" style="margin-top:4px;">Biglietti disponibili</div>
+
+      <div id="buy-list"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="bnav-item" onclick="showPage('home')">
+      <div class="bnav-icon">🏠</div>
+      <span>Home</span>
+    </div>
+    <div class="bnav-item" onclick="showPage('lines')">
+      <div class="bnav-icon">🚌</div>
+      <span>Linee</span>
+    </div>
+    <div class="bnav-item active" id="bnav-tickets" onclick="showPage('biglietti')">
+      <div class="bnav-icon">🎫</div>
+      <span>Biglietti</span>
+    </div>
+  </nav>
+
+</div><!-- /phone -->
+
+<!-- QR SCANNER OVERLAY -->
+<div class="overlay" id="scan-overlay">
+  <div class="overlay-head">
+    <button class="overlay-back" onclick="closeScanner()">‹ Indietro</button>
+    <span class="overlay-title">Valida biglietto</span>
+  </div>
+  <div class="scanner-area">
+    <div id="qr-reader" style="width:100%;height:100%;"></div>
+    <div class="scanner-frame">
+      <div class="scan-box">
+        <div class="corner-bl"></div>
+        <div class="corner-br"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    <div class="scan-hint">Inquadra il QR code del biglietto</div>
+    <div class="val-popup" id="val-popup">
+      <div class="val-handle"></div>
+      <div class="val-status" id="val-status-area"></div>
+      <div id="val-info-rows"></div>
+      <div class="val-scan-time" id="val-scan-time"></div>
+      <button class="val-close" onclick="closeValidation()">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUY CONFIRM SHEET -->
+<div class="buy-overlay" id="buy-overlay">
+  <div class="buy-sheet">
+    <div class="buy-sheet-handle"></div>
+    <h2 id="bs-name"></h2>
+    <div class="bprice" id="bs-price"></div>
+    <p id="bs-desc"></p>
+    <button class="buy-confirm-btn" onclick="confirmBuy()">Acquista ora</button>
+    <button class="buy-cancel-btn" onclick="closeBuySheet()">Annulla</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── DATA ───────────────────────────────────────────────
+  const TICKET_TYPES = [
+    { id: 'urbano-orario',       name: 'Biglietto urbano orario',       price: 2.00,  validityMs: 90 * 60000,           desc: 'Valido 90 min dalla prima convalida' },
+    { id: 'urbano-8corse',       name: 'Biglietto urbano 8 corse',      price: 14.50, validityMs: 365 * 24 * 3600000,   desc: 'Carnet da 8 corse in zona urbana' },
+    { id: 'extraurbano-1zona',   name: 'Biglietto extraurbano 1 zona',  price: 1.80,  validityMs: 90 * 60000,           desc: 'Valido 90 min, 1 zona extraurbana' },
+    { id: 'extraurbano-2zone',   name: 'Biglietto extraurbano 2 zone',  price: 3.00,  validityMs: 90 * 60000,           desc: 'Valido 90 min, 2 zone extraurbane' },
+    { id: 'extraurbano-3zone',   name: 'Biglietto extraurbano 3 zone',  price: 4.00,  validityMs: 90 * 60000,           desc: 'Valido 90 min, 3 zone extraurbane' },
+  ];
+
+  let tickets = JSON.parse(localStorage.getItem('tep_tickets') || '[]').map(t => ({
+    ...t, purchaseDate: new Date(t.purchaseDate), expiryDate: new Date(t.expiryDate),
+    validatedAt: t.validatedAt ? new Date(t.validatedAt) : null
+  }));
+
+  let qrScanner = null;
+  let scanningTicketId = null;
+  let showExpired = false;
+  let pendingBuy = null;
+  let currentPage = 'biglietti';
+
+  // ─── UTILS ──────────────────────────────────────────────
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function fmtDate(dt) {
+    return pad(dt.getDate()) + '/' + pad(dt.getMonth()+1) + '/' + String(dt.getFullYear()).slice(2)
+      + ' ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+  }
+
+  function fmtFull(dt) {
+    return dt.toLocaleDateString('it-IT', {day:'2-digit',month:'long',year:'numeric'})
+      + ' ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()) + ':' + pad(dt.getSeconds());
+  }
+
+  function genId() {
+    return 'TEP-' + Math.random().toString(36).slice(2,6).toUpperCase()
+           + '-' + Math.random().toString(36).slice(2,5).toUpperCase();
+  }
+
+  function saveTickets() {
+    localStorage.setItem('tep_tickets', JSON.stringify(tickets));
+  }
+
+  function updateClock() {
+    const n = new Date();
+    document.getElementById('clock').textContent = pad(n.getHours())+':'+pad(n.getMinutes());
+  }
+  setInterval(updateClock, 10000);
+  updateClock();
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ─── PAGE ROUTING ────────────────────────────────────────
+  function showPage(p) {
+    if (p === 'home' || p === 'lines') { showToast('Sezione non disponibile'); return; }
+
+    currentPage = p;
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.bnav-item').forEach(el => el.classList.remove('active'));
+
+    const topTitle = { biglietti: 'Biglietti', buy: 'Acquista' };
+    document.getElementById('page-title').textContent = topTitle[p] || '';
+    document.getElementById('buy-btn-top').style.display = (p === 'buy') ? 'none' : 'block';
+
+    if (p === 'biglietti') {
+      document.getElementById('page-biglietti').classList.add('active');
+      document.getElementById('bnav-tickets').classList.add('active');
+      renderTickets();
+    } else if (p === 'buy') {
+      document.getElementById('page-buy').classList.add('active');
+      document.getElementById('bnav-tickets').classList.add('active');
+      renderBuyList();
+    }
+  }
+
+  // ─── BUY FLOW ────────────────────────────────────────────
+  function renderBuyList() {
+    const list = document.getElementById('buy-list');
+    list.innerHTML = TICKET_TYPES.map(tt => `
+      <div class="buy-item">
+        <div>
+          <div class="buy-item-name">${tt.name}</div>
+          <div class="buy-item-desc">${tt.desc}</div>
+        </div>
+        <div class="buy-item-right">
+          <div class="tep-logo">tep</div>
+          <button class="price-btn" onclick="openBuySheet('${tt.id}')">€ ${tt.price.toFixed(2).replace('.',',')}</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openBuySheet(typeId) {
+    const tt = TICKET_TYPES.find(t => t.id === typeId);
+    if (!tt) return;
+    pendingBuy = tt;
+    document.getElementById('bs-name').textContent = tt.name;
+    document.getElementById('bs-price').textContent = '€ ' + tt.price.toFixed(2).replace('.',',');
+    document.getElementById('bs-desc').textContent = tt.desc;
+    document.getElementById('buy-overlay').classList.add('open');
+  }
+
+  function closeBuySheet() {
+    document.getElementById('buy-overlay').classList.remove('open');
+    pendingBuy = null;
+  }
+
+  function confirmBuy() {
+    if (!pendingBuy) return;
+    const now = new Date();
+    const expiry = new Date(now.getTime() + pendingBuy.validityMs);
+    const ticket = {
+      id: genId(),
+      typeId: pendingBuy.id,
+      name: pendingBuy.name,
+      price: pendingBuy.price,
+      purchaseDate: now,
+      expiryDate: expiry,
+      validatedAt: null,
+      scanNote: null,
+    };
+    tickets.unshift(ticket);
+    saveTickets();
+    closeBuySheet();
+    showToast('Biglietto acquistato ✓');
+    showPage('biglietti');
+  }
+
+  // ─── TICKET RENDERING ────────────────────────────────────
+  function renderTickets() {
+    const now = new Date();
+    const active  = tickets.filter(t => t.expiryDate > now);
+    const expired = tickets.filter(t => t.expiryDate <= now);
+
+    const emptyEl   = document.getElementById('empty-state');
+    const activeLabel = document.getElementById('active-label');
+    const activeEl  = document.getElementById('active-tickets');
+    const expRow    = document.getElementById('expired-row');
+    const expLabel  = document.getElementById('expired-label');
+    const expEl     = document.getElementById('expired-tickets');
+
+    emptyEl.style.display    = tickets.length === 0 ? 'block' : 'none';
+    activeLabel.style.display = active.length > 0 ? 'block' : 'none';
+    expRow.style.display      = expired.length > 0 ? 'flex' : 'none';
+
+    activeEl.innerHTML = active.map(t => ticketCardHTML(t, false)).join('');
+    // Build QR codes for active tickets
+    setTimeout(() => active.forEach(t => buildQR(t)), 50);
+
+    if (showExpired && expired.length > 0) {
+      expLabel.style.display = 'block';
+      expEl.innerHTML = expired.map(t => ticketCardHTML(t, true)).join('');
+      setTimeout(() => expired.forEach(t => buildQR(t)), 50);
+    } else {
+      expLabel.style.display = 'none';
+      expEl.innerHTML = '';
+    }
+  }
+
+  function ticketCardHTML(t, isExpired) {
+    const now = new Date();
+    const active = t.expiryDate > now && !t.validatedAt;
+    const badgeCls = isExpired ? 'badge-expired' : (t.validatedAt ? 'badge-used' : 'badge-active');
+    const badgeTxt = isExpired ? 'Scaduto' : (t.validatedAt ? 'Usato' : 'Attivo');
+
+    const scanNote = t.validatedAt
+      ? `<div class="scan-stamp">✅ Convalidato il ${fmtFull(new Date(t.validatedAt))}</div>`
+      : '';
+
+    const actionBtn = isExpired
+      ? `<span class="used-label">Scaduto</span>`
+      : (t.validatedAt
+          ? `<span class="used-label">✓ Usato</span>`
+          : `<button class="validate-btn" onclick="openScanner('${t.id}')">Valida QR</button>`);
+
+    const expiredOverlay = isExpired
+      ? `<div class="expired-overlay"><div class="expired-stamp">Scaduto</div></div>`
+      : '';
+
+    return `
+    <div class="ticket-card" id="tc-${t.id}">
+      <div class="ticket-stripe"></div>
+      <div class="ticket-inner">
+        <div class="ticket-head">
+          <div>
+            <div class="ticket-name">${t.name}</div>
+            <div class="ticket-sub">Acquistato: ${fmtDate(new Date(t.purchaseDate))}</div>
+          </div>
+          <span class="badge ${badgeCls}">${badgeTxt}</span>
+        </div>
+        <div class="ticket-body">
+          <div class="ticket-meta">
+            <div class="t-row"><span class="t-label">Acquisto</span><strong>${fmtDate(new Date(t.purchaseDate))}</strong></div>
+            <div class="t-row"><span class="t-label">Scadenza</span><strong>${fmtDate(new Date(t.expiryDate))}</strong></div>
+            <div class="t-row"><span class="t-label">Prezzo</span><strong>€ ${t.price.toFixed(2).replace('.',',')}</strong></div>
+          </div>
+          <div class="qr-wrap" id="qr-${t.id}"></div>
+        </div>
+      </div>
+      ${scanNote}
+      <div class="ticket-footer">
+        <span class="ticket-id">${t.id}</span>
+        ${actionBtn}
+      </div>
+      ${expiredOverlay}
+    </div>`;
+  }
+
+  function buildQR(t) {
+    const el = document.getElementById('qr-' + t.id);
+    if (!el || el.querySelector('canvas')) return;
+    try {
+      new QRCode(el, {
+        text: JSON.stringify({ id: t.id, type: t.typeId, exp: t.expiryDate }),
+        width: 64, height: 64,
+        colorDark: '#1a3a5c',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    } catch(e) {}
+  }
+
+  function toggleExpired() {
+    showExpired = !showExpired;
+    renderTickets();
+  }
+
+  // ─── QR SCANNER ─────────────────────────────────────────
+  function openScanner(ticketId) {
+    scanningTicketId = ticketId;
+    document.getElementById('scan-overlay').classList.add('open');
+    document.getElementById('val-popup').classList.remove('show');
+
+    // Start camera
+    try {
+      if (qrScanner) {
+        qrScanner.resume().catch(() => startFreshScanner());
+      } else {
+        startFreshScanner();
+      }
+    } catch(e) {
+      startFreshScanner();
+    }
+  }
+
+  function startFreshScanner() {
+    if (qrScanner) {
+      try { qrScanner.stop(); } catch(e) {}
+      qrScanner = null;
+    }
+    document.getElementById('qr-reader').innerHTML = '';
+
+    qrScanner = new Html5Qrcode('qr-reader');
+    qrScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+      onQRScan,
+      () => {}
+    ).catch(err => {
+      // Camera denied — simulate scan for demo
+      console.warn('Camera not available, demo mode:', err);
+      simulateScan();
+    });
+  }
+
+  function onQRScan(decodedText) {
+    try {
+      const data = JSON.parse(decodedText);
+      processValidation(data.id || scanningTicketId, decodedText);
+    } catch(e) {
+      processValidation(scanningTicketId, decodedText);
+    }
+  }
+
+  function simulateScan() {
+    // In demo mode (no camera), auto-validate after 1.5s
+    setTimeout(() => {
+      if (document.getElementById('scan-overlay').classList.contains('open')) {
+        processValidation(scanningTicketId, 'demo');
+      }
+    }, 1500);
+  }
+
+  function processValidation(ticketId, rawScan) {
+    if (qrScanner) {
+      try { qrScanner.pause(); } catch(e) {}
+    }
+
+    const scanTime = new Date();
+    const t = tickets.find(t => t.id === ticketId);
+    const now = new Date();
+    const isValid = t && t.expiryDate > now && !t.validatedAt;
+
+    // Write scan timestamp to ticket
+    if (t && isValid) {
+      t.validatedAt = scanTime;
+      t.scanNote = 'Convalidato il ' + fmtFull(scanTime);
+      saveTickets();
+    }
+
+    // Show result popup
+    const popup = document.getElementById('val-popup');
+    const statusArea = document.getElementById('val-status-area');
+    const infoRows = document.getElementById('val-info-rows');
+    const scanTimeEl = document.getElementById('val-scan-time');
+
+    if (isValid && t) {
+      statusArea.innerHTML = `
+        <div class="val-icon ok">✅</div>
+        <div>
+          <div class="val-title">Biglietto Valido</div>
+          <div class="val-sub">Convalida completata con successo</div>
+        </div>`;
+      infoRows.innerHTML = `
+        <div class="val-info-row"><span class="val-info-label">Biglietto</span><span class="val-info-val">${t.name}</span></div>
+        <div class="val-info-row"><span class="val-info-label">ID</span><span class="val-info-val">${t.id}</span></div>
+        <div class="val-info-row"><span class="val-info-label">Scadenza</span><span class="val-info-val">${fmtDate(new Date(t.expiryDate))}</span></div>`;
+    } else {
+      const reason = !t ? 'Biglietto non trovato' : (t.validatedAt ? 'Già convalidato' : 'Scaduto');
+      statusArea.innerHTML = `
+        <div class="val-icon no">❌</div>
+        <div>
+          <div class="val-title">Non Valido</div>
+          <div class="val-sub">${reason}</div>
+        </div>`;
+      infoRows.innerHTML = t ? `
+        <div class="val-info-row"><span class="val-info-label">Biglietto</span><span class="val-info-val">${t.name}</span></div>
+        <div class="val-info-row"><span class="val-info-label">ID</span><span class="val-info-val">${t.id}</span></div>` : '';
+    }
+
+    // SCAN DATE & TIME prominently
+    scanTimeEl.innerHTML = `🕐 Scansione: <strong>${fmtFull(scanTime)}</strong>`;
+
+    popup.classList.add('show');
+  }
+
+  function closeValidation() {
+    document.getElementById('val-popup').classList.remove('show');
+    setTimeout(closeScanner, 300);
+  }
+
+  function closeScanner() {
+    document.getElementById('scan-overlay').classList.remove('open');
+    if (qrScanner) {
+      try { qrScanner.stop(); } catch(e) {}
+      qrScanner = null;
+    }
+    document.getElementById('qr-reader').innerHTML = '';
+    scanningTicketId = null;
+    renderTickets();
+  }
+
+  // ─── INIT ────────────────────────────────────────────────
+  renderTickets();
+  renderBuyList();
+</script>
+</body>
+</html>
